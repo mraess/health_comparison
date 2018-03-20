@@ -77,7 +77,10 @@ server <- function(input, output, session) {
         
         output$map <- renderPlot({
                 
-                health_data %>% filter(state == input$state) %>% mutate(state = as.factor(state)) %>% 
+                #--- Show the spinner ---#
+                material_spinner_show(session, "map")
+                
+                plot <- health_data %>% filter(state == input$state) %>% mutate(state = as.factor(state)) %>% 
                         filter(observed == input$procedure) %>% group_by(hospital.name, state, observed) %>% 
                         summarise(sum = sum(amount)) %>%  
                         ggplot(aes(hospital.name, sum - mean(sum))) + 
@@ -85,6 +88,14 @@ server <- function(input, output, session) {
                         ylab("Observed incidences - difference to state-mean") +
                         coord_flip() +
                         theme(axis.title.y = element_blank())
+                
+                #--- Simulate calculation step ---#
+                Sys.sleep(time = 2)
+                
+                #--- Hide the spinner ---#
+                material_spinner_hide(session, "map")
+                
+                plot
                         
         })
         
