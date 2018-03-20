@@ -35,12 +35,24 @@ ui <- material_page(
         )
 )
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+        
         output$complications_state <- renderPlot({
+                
+                #--- Show the spinner ---#
+                material_spinner_show(session, "complications_state")
+                
+                #--- Simulate calculation step ---#
+                Sys.sleep(time = 5)
+                
+                #--- Hide the spinner ---#
+                material_spinner_hide(session, "complications_state")
                 
                 health_data %>% group_by(state, observed) %>% summarise(n = sum(amount)) %>% 
                         
                         ggplot(aes(reorder(state, n), n, fill = observed)) + geom_col() + coord_flip()
+                
+
         })
         
         

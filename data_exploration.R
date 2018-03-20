@@ -50,33 +50,41 @@ infections_hosp_tidy <- infections_hosp_tidy %>% mutate(observed = as.factor(obs
 
 infections_hosp_tidy <- unique(infections_hosp_tidy)
 
-test <- infections_hosp_tidy %>% group_by(state) %>% summarise(n = sum(amount)) %>% 
+infections_hosp_tidy <- infections_hosp_tidy %>% select(hospital.name, state, zip.code, observed, amount)
+
+library(zipcode)
+
+infections_hosp_tidy$zip.code <- clean.zipcodes(infections_hosp_tidy$zip.code)
+
+data("zipcode")
+
+infections_hosp_tidy <- infections_hosp_tidy %>% left_join(zipcode[,c("zip", "latitude", "longitude")], by = c("zip.code" = "zip"))
+
+test <- infections_hosp_tidy %>% group_by(state, observed) %>% summarise(n = sum(amount)) %>% 
         
         ggplot(aes(reorder(state, n), n, fill = observed)) + geom_col() + coord_flip()
 
-library(leaflet)
-library(raster)
 
-usa <- getData("GADM", country="USA", level = 1)
+test <- infections_hosp_tidy %>% filter(state == "AK") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
+        summarise(sum = sum(amount)) %>% filter(observed == "c_diff_observed")
+
+library(leaflet)
+
 
 
 #create a color palette to fill the polygons
 pal <- colorQuantile("Greens", NULL, n = 5)
 
 #create a pop up (onClick)
-polygon_popup <- paste0("<strong>Name: </strong>", usa$NAME_1, "<br>",
-                        "<strong>Indicator: </strong>", test$n)
+popup <- paste0("<strong>Name: </strong>", test$hospital.name, "<br>",
+                        "<strong>Incidences: </strong>", test$sum)
 
 #create leaflet map
-map1 <-  leaflet() %>% 
+map1 <- leaflet(test) %>% 
         addProviderTiles("CartoDB.Positron") %>% 
         setView(-98.35, 39.7,
-                zoom = 4) %>% 
-        addPolygons(data = usa, 
-                    fillColor= ~pal(test$n),
-                    fillOpacity = 0.4, 
-                    weight = 2, 
-                    color = "white",
-                    popup = polygon_popup)
+                zoom = 2) %>% 
+        addAwesomeMarkers(popup = popup)
+
         
 map1
