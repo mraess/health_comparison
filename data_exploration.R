@@ -70,23 +70,35 @@ test <- infections_hosp_tidy %>% group_by(state, observed) %>% summarise(n = sum
 test <- infections_hosp_tidy %>% filter(state == "AK") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
         summarise(sum = sum(amount)) %>% filter(observed == "c_diff_observed")
 
+infections_hosp_tidy %>% filter(state == "IN") %>% 
+        filter(observed == "c_diff_observed") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
+        summarise(sum = sum(amount))
+
 library(leaflet)
 
+"http://www.clker.com/cliparts/I/X/g/L/q/2/yellow-neutral-face-th.png"
 
+neutral <- makeIcon(
+        iconUrl = "http://www.clker.com/cliparts/I/X/g/L/q/2/yellow-neutral-face-th.png",
+        iconWidth = 38, iconHeight = 95,
+        iconAnchorX = 22, iconAnchorY = 94
 
-#create a color palette to fill the polygons
-pal <- colorQuantile("Greens", NULL, n = 5)
+        )
 
 #create a pop up (onClick)
 popup <- paste0("<strong>Name: </strong>", test$hospital.name, "<br>",
                         "<strong>Incidences: </strong>", test$sum)
+
+colors <- case_when(test$sum <= (mean(test$sum) - 2) ~ "green",
+                             test$sum == mean(test$sum) - 1 | mean(test$sum) + 1 ~ "yellow",
+                             test$sum >= (mean(test$sum) + 2) ~ "red")
 
 #create leaflet map
 map1 <- leaflet(test) %>% 
         addProviderTiles("CartoDB.Positron") %>% 
         setView(-98.35, 39.7,
                 zoom = 2) %>% 
-        addAwesomeMarkers(popup = popup)
+        addCircleMarkers(radius = 6, color = colors, group = "observed", popup = popup)
 
         
 map1
