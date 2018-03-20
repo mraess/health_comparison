@@ -70,9 +70,10 @@ test <- infections_hosp_tidy %>% group_by(state, observed) %>% summarise(n = sum
 test <- infections_hosp_tidy %>% filter(state == "AK") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
         summarise(sum = sum(amount)) %>% filter(observed == "c_diff_observed")
 
-infections_hosp_tidy %>% filter(state == "IN") %>% 
-        filter(observed == "c_diff_observed") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
-        summarise(sum = sum(amount))
+infections_hosp_tidy %>% filter(state == "IN" | state == "AL") %>% mutate(state = as.factor(state)) %>% 
+        filter(observed == "c_diff_observed") %>% group_by(hospital.name, state, observed) %>% 
+        summarise(sum = sum(amount)) %>% ggplot(aes(hospital.name, sum - mean(sum))) + geom_col() + facet_grid(state~.) + 
+        coord_flip() + ylab("test")
 
 library(leaflet)
 

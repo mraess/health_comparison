@@ -31,7 +31,7 @@ ui <- material_page(
                                                 label = "State:",
                                                 choices = sort(unique(health_data$state)),
                                                 color = "blue",
-                                          multiple = TRUE)),
+                                          multiple = FALSE)),
                         material_column(width = 5,
                                         material_dropdown(
                                                 input_id = "procedure",
@@ -43,14 +43,14 @@ ui <- material_page(
                                                                "Methicillin-resistant Staphylococcus Aureus (MRSA) blood infections" = "mrsa_observed",
                                                                "Central line-associated bloodstream infections (CLABSI)" = "clabsi_observed"),
                                                 color = "red",
-                                                multiple = TRUE
+                                                multiple = FALSE
                                                 
                                         ))
                 ),
                         
                 material_card(
                         title = "Complications with infections by state",
-                        leafletOutput(outputId = "map", width = "100%", height = 400),
+                        plotOutput(outputId = "map"),
                         depth = 2
                 )
         ),
@@ -65,30 +65,17 @@ ui <- material_page(
 server <- function(input, output, session) {
         
         
-        ## Map output
-        
-        ## Get reactive output
-        
-        map_data <- health_data %>% filter(state %in% input$state) %>% 
-                filter(observed %in% input$procedure) %>% group_by(hospital.name, observed, latitude, longitude) %>% 
-                summarise(sum = sum(amount))
-        
-        #create a pop up (onClick)
-        popup <- paste0("<strong>Name: </strong>", map_data$hospital.name, "<br>",
-                        "<strong>Incidences: </strong>", map_data$sum)
-        
-        colors <- case_when(test$sum <= (mean(map_data$sum) - 2) ~ "green",
-                            test$sum == mean(map_data$sum) - 1 | mean(map_data$sum) + 1 ~ "yellow",
-                            test$sum >= (mean(map_data$sum) + 2) ~ "red")
-        
-        output$map <- renderLeaflet({
-        
+        output$map <- renderPlot({
                 
-                leaflet() %>% 
-                        addProviderTiles("CartoDB.Positron") %>% 
-                        setView(-98.35, 39.7,
-                                zoom = 4)
-
+                health_data %>% filter(state == input$state) %>% mutate(state = as.factor(state)) %>% 
+                        filter(observed == input$procedure) %>% group_by(hospital.name, state, observed) %>% 
+                        summarise(sum = sum(amount)) %>%  
+                        ggplot(aes(hospital.name, sum - mean(sum))) + 
+                        geom_col() + 
+                        ylab("Observed incidences - difference to state-mean") +
+                        coord_flip() +
+                        theme(axis.title.y = element_blank())
+                        
         })
         
         
