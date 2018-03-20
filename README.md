@@ -6,6 +6,9 @@ First insights:
 1) The data are very messy, and a lot of wrangling had to be done before I could make the first plot
 2) The first data set to go on the app contains roughly 69,000 hospitals in the US with numbers of hospital related infections by surgical/medical procedure.
 
+
+First preliminary visualization is working. The next step is to implement a leaflet-map which then shows the hospitals after subsetting.
+
 More to come soon...
 
 I do **not** own any of the data. However, they are publicly available at:
