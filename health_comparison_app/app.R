@@ -16,15 +16,15 @@ ui <- material_page(
                 # Place side-nav tabs within side-nav
                 material_side_nav_tabs(
                         side_nav_tabs = c(
-                                "Example Side-Nav Tab 1" = "example_side_nav_tab_1",
-                                "Example Side-Nav Tab 2" = "example_side_nav_tab_2"
+                                "Explore the data" = "nav1",
+                                "Data source" = "nav2"
                         ),
-                        icons = c("cast", "insert_chart")
+                        icons = c("insert_chart", "explore")
                 )
         ),
         # Define side-nav tab content
         material_side_nav_tab_content(
-                side_nav_tab_id = "example_side_nav_tab_1",
+                side_nav_tab_id = "nav1",
                 tags$br(),
                 material_row(material_column(width = 3,
                         material_dropdown(input_id = "state",
@@ -55,9 +55,19 @@ ui <- material_page(
                 )
         ),
         material_side_nav_tab_content(
-                side_nav_tab_id = "example_side_nav_tab_2",
-                tags$h1("Second Side-Nav Tab Content"),
-                absolutePanel(),
+                side_nav_tab_id = "nav2",
+                tags$br(),
+                material_row(
+                        material_column(
+                                width = 10,
+                                material_card(
+                                        title = "Data source",
+                                        tags$a(href = "https://data.medicare.gov/data/hospital-compare",
+                                               target = "_blank",
+                                               "Medicare")
+                                )
+                        )
+                ),
                 depth = 2
         )
 )

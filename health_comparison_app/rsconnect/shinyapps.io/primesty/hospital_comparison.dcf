@@ -1,0 +1,12 @@
+name: hospital_comparison
+title: hospital_comparison
+username:
+account: primesty
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 303982
+bundleId: 1279438
+url: https://primesty.shinyapps.io/hospital_comparison/
+when: 1521586398.34824
+asMultiple: FALSE
+asStatic: FALSE
