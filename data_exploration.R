@@ -11,7 +11,7 @@ summary(comp_death_state)
 unique(comp_death_state$Measure.Name)
 
 
-# Do infections first
+# Start with complications with infections
 
 names(infections_hospital) <- tolower(names(infections_hospital))
 
@@ -51,6 +51,8 @@ infections_hosp_tidy <- infections_hosp_tidy %>% mutate(observed = as.factor(obs
 infections_hosp_tidy <- unique(infections_hosp_tidy)
 
 infections_hosp_tidy <- infections_hosp_tidy %>% select(hospital.name, state, zip.code, observed, amount)
+
+### Getting long/lat for hospitals from zipcode
 
 library(zipcode)
 
