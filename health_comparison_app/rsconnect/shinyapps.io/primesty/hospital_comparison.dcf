@@ -5,8 +5,8 @@ account: primesty
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 303982
-bundleId: 1280678
+bundleId: 1280892
 url: https://primesty.shinyapps.io/hospital_comparison/
-when: 1521649035.91831
+when: 1521655005.89059
 asMultiple: FALSE
 asStatic: FALSE
