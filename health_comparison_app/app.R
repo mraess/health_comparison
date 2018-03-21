@@ -2,12 +2,13 @@ library(shiny)
 library(shinymaterial)
 library(leaflet)
 library(tidyverse)
+library(RColorBrewer)
 
 health_data <- readRDS("./data/infections_hosp_tidy.rds")
 
 # Wrap shinymaterial apps in material_page
 ui <- material_page(
-        title = "Comparison of hospital related infections",
+        title = "Comparison of hospital related infections for 2016-2017",
         nav_bar_fixed = TRUE,
         nav_bar_color = "blue",
         # Place side-nav in the beginning of the UI
@@ -49,7 +50,7 @@ ui <- material_page(
                 ),
                         
                 material_card(
-                        title = "Complications with infections by state",
+                        
                         plotOutput(outputId = "map"),
                         depth = 2
                 )
@@ -80,14 +81,26 @@ server <- function(input, output, session) {
                 #--- Show the spinner ---#
                 material_spinner_show(session, "map")
                 
-                plot <- health_data %>% filter(state == input$state) %>% mutate(state = as.factor(state)) %>% 
-                        filter(observed == input$procedure) %>% group_by(hospital.name, state, observed) %>% 
-                        summarise(sum = sum(amount)) %>%  
-                        ggplot(aes(hospital.name, sum - mean(sum))) + 
-                        geom_col() + 
-                        ylab("Observed incidences - difference to state-mean") +
+                plot_data <- health_data %>% filter(observed == input$procedure) %>% 
+                        mutate(nat_mean = mean(amount, na.rm = TRUE)) %>% 
+                        filter(state == input$state) %>%
+                        mutate(state = as.factor(state),
+                               state_mean = mean(amount),
+                               trend = ifelse(amount - state_mean > 0, "negative", "positive")) %>% 
+                        group_by(hospital.name, state, observed, nat_mean, trend)
+                
+                
+                plot <- ggplot(plot_data, aes(hospital.name, amount - state_mean, fill = trend)) + geom_col() + 
+                        geom_hline(aes(yintercept = nat_mean), col = "red", alpha = .5, size = 1.5) + 
+                        geom_hline(aes(yintercept = 0), col = "blue", size = 1.5, alpha = 2/3) +
+                        scale_fill_brewer(guide = FALSE, type = "qual", palette = 4)+
                         coord_flip() +
-                        theme(axis.title.y = element_blank())
+                        theme(axis.title.y = element_blank()) +
+                        labs(caption = paste("Red line = national mean:", round(plot_data$nat_mean, 2),"\n", 
+                                        "Blue line = state mean:", round(plot_data$state_mean, 2)), 
+                             y = "Observed incidences - difference to state-mean",
+                             title = paste("Complications with infections for:", input$state))
+                
                 
                 #--- Simulate calculation step ---#
                 Sys.sleep(time = 2)

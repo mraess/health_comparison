@@ -48,7 +48,7 @@ infections_hosp_tidy <- infections_hosp_tidy %>% mutate(observed = as.factor(obs
                                                         measure.start.date = as.Date(measure.start.date, format = "%m/%d/%Y"),
                                                         measure.end.date = as.Date(measure.end.date, format = "%m/%d/%Y"))
 
-infections_hosp_tidy <- unique(infections_hosp_tidy)
+infections_hosp_tidy <- infections_hosp_tidy %>% distinct()
 
 infections_hosp_tidy <- infections_hosp_tidy %>% select(hospital.name, state, zip.code, observed, amount)
 
@@ -70,10 +70,23 @@ test <- infections_hosp_tidy %>% group_by(state, observed) %>% summarise(n = sum
 test <- infections_hosp_tidy %>% filter(state == "AK") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
         summarise(sum = sum(amount)) %>% filter(observed == "c_diff_observed")
 
-infections_hosp_tidy %>% filter(state == "IN" | state == "AL") %>% mutate(state = as.factor(state)) %>% 
-        filter(observed == "c_diff_observed") %>% group_by(hospital.name, state, observed) %>% 
-        summarise(sum = sum(amount)) %>% ggplot(aes(hospital.name, sum - mean(sum))) + geom_col() + facet_grid(state~.) + 
-        coord_flip() + ylab("test")
+
+## Summarize by complication and state
+## 
+plot_data <- infections_hosp_tidy %>% filter(observed == "c_diff_observed") %>% mutate(nat_mean = mean(amount, na.rm = TRUE)) %>% 
+        filter(state == "AK") %>% mutate(state = as.factor(state), 
+                                         state_mean = mean(amount),
+                                         trend = ifelse(amount - state_mean > 0, "negative", "positive")) %>% 
+        group_by(hospital.name, state, observed, nat_mean, trend)
+
+
+        ggplot(plot_data, aes(hospital.name, amount - state_mean, fill = trend)) + geom_col() + 
+        coord_flip() + ylab("test") + 
+        geom_hline(aes(yintercept = nat_mean - state_mean), col = "red", alpha = .5, size = 1.5) + 
+        geom_hline(aes(yintercept = 0), col = "blue", size = 1.5, alpha = 2/3) +
+        scale_fill_brewer(guide = FALSE, type = "qual", palette = 4) +
+        labs(caption = paste("Red line = national mean:", round(plot_data$nat_mean, 2),"\n", 
+                             "Blue line = state mean:", round(plot_data$state_mean, 2)))
 
 library(leaflet)
 
