@@ -48,7 +48,7 @@ infections_hosp_tidy <- infections_hosp_tidy %>% mutate(observed = as.factor(obs
                                                         measure.start.date = as.Date(measure.start.date, format = "%m/%d/%Y"),
                                                         measure.end.date = as.Date(measure.end.date, format = "%m/%d/%Y"))
 
-infections_hosp_tidy <- infections_hosp_tidy %>% distinct()
+infections_hosp_tidy <- infections_hosp_tidy %>% distinct() # get distinct cases
 
 infections_hosp_tidy <- infections_hosp_tidy %>% select(hospital.name, state, zip.code, observed, amount)
 
@@ -69,6 +69,28 @@ test <- infections_hosp_tidy %>% group_by(state, observed) %>% summarise(n = sum
 
 test <- infections_hosp_tidy %>% filter(state == "AK") %>% group_by(hospital.name, observed, latitude, longitude) %>% 
         summarise(sum = sum(amount)) %>% filter(observed == "c_diff_observed")
+
+infections_hosp_tidy %>% filter(state == "AK", observed == "c_diff_observed") %>% 
+        group_by(hospital.name, observed, latitude, longitude) %>% distinct(hospital.name, amount) %>%
+        mutate(mean = mean(amount)) %>% 
+        mutate(popup = paste0("<strong>Name: </strong>", hospital.name, "<br>",
+                              "<strong>Incidences: </strong>", amount)) %>% 
+        mutate(colors = case_when(amount <= (mean(amount) - 2) ~ "green",
+                                  amount == mean(amount) - 1 | mean(amount) + 1 ~ "yellow",
+                                  amount >= (mean(amount) + 2) ~ "red"))
+
+
+test <- infections_hosp_tidy %>% filter(observed == "c_diff_observed") %>% 
+        filter(state == "CT") %>%
+        mutate(state = as.factor(state),
+               state_mean = mean(amount),
+               trend = ifelse(amount - state_mean > 0, "negative", "positive")) %>% 
+        group_by(hospital.name, state, observed, trend) %>% 
+        mutate(popup = paste0("<strong>Name: </strong>", hospital.name, "<br>",
+                              "<strong>Incidences: </strong>", amount)) %>% 
+        mutate(colors = case_when(trend == "negative" ~ "red",
+                                  trend == "positive" ~ "green")) %>% 
+        unique()
 
 
 ## Summarize by complication and state
@@ -112,7 +134,7 @@ map1 <- leaflet(test) %>%
         addProviderTiles("CartoDB.Positron") %>% 
         setView(-98.35, 39.7,
                 zoom = 2) %>% 
-        addCircleMarkers(radius = 6, color = colors, group = "observed", popup = popup)
+        addCircleMarkers(radius = 6, color = ~colors, group = "observed", popup = ~popup)
 
         
 map1

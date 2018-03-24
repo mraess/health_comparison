@@ -51,10 +51,27 @@ ui <- material_page(
                         
                 material_card(
                         
-                        plotOutput(outputId = "map"),
+                        plotOutput(outputId = "graph"),
                         depth = 2
-                )
-        ),
+                ), 
+                
+                material_card(
+                        leafletOutput(outputId = "map"),
+                        depth = 2
+                ),
+                
+                material_row(
+                        material_column(
+                                width = 6,
+                                tags$a(
+                                        target = "_blank",
+                                        class = "btn blue",
+                                        href = "https://github.com/mraess/health_comparison/blob/master/health_comparison_app/app.R",
+                                        "APP CODE"
+                                )
+                        )
+                
+        )),
         material_side_nav_tab_content(
                 side_nav_tab_id = "nav2",
                 tags$br(),
@@ -73,13 +90,18 @@ ui <- material_page(
         )
 )
 
+
+# server ------------------------------------------------------------------
+
+
+
 server <- function(input, output, session) {
         
         
-        output$map <- renderPlot({
+        output$graph <- renderPlot({
                 
                 #--- Show the spinner ---#
-                material_spinner_show(session, "map")
+                material_spinner_show(session, "graph")
                 
                 plot_data <- health_data %>% filter(observed == input$procedure) %>% 
                         mutate(nat_mean = mean(amount, na.rm = TRUE)) %>% 
@@ -106,11 +128,59 @@ server <- function(input, output, session) {
                 Sys.sleep(time = 2)
                 
                 #--- Hide the spinner ---#
-                material_spinner_hide(session, "map")
+                material_spinner_hide(session, "graph")
                 
                 plot
                         
         })
+        
+                
+
+
+                
+
+        
+
+                
+        output$map <-  renderLeaflet({
+                
+                #--- Show the spinner ---#
+                material_spinner_show(session, "map")
+                
+                # Subsetting data
+                pts <- reactive({health_data %>% 
+                                filter(state == input$state) %>%
+                                filter(observed == input$procedure) %>%
+                                mutate(state = as.factor(state),
+                                       state_mean = mean(amount),
+                                       trend = ifelse(amount - state_mean > 0, "negative", "positive")) %>% 
+                                group_by(hospital.name, state, observed, trend) %>% 
+                                mutate(popup = paste0("<strong>Name: </strong>", hospital.name, "<br>",
+                                                      "<strong>Incidences: </strong>", amount)) %>% 
+                                mutate(colors = case_when(trend == "negative" ~ "red",
+                                                          trend == "positive" ~ "green")) %>% 
+                                unique()
+                        
+                })
+                
+
+                
+
+                
+                #--- Simulate calculation step ---#
+                Sys.sleep(time = 1)
+                
+                #--- Hide the spinner ---#
+                material_spinner_hide(session, "map")
+                
+                leaflet() %>% 
+                        addProviderTiles("CartoDB.Positron") %>% setView(-93.65, 42.0285, zoom = 4) %>% 
+                        addCircleMarkers(data = pts(), radius = 6, color = ~colors, popup = ~popup)
+        })
+
+                
+                
+
         
         
 }
