@@ -17,3 +17,5 @@ I do **not** own any of the data. However, they are publicly available at:
 
 https://data.medicare.gov/data/hospital-compare
 
+![Diss gif](https://github.com/mraess/hospital_comparison/blob/master/hospital_comparison.gif)
+
