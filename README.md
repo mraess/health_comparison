@@ -7,7 +7,9 @@ First insights:
 2) The first data set to go on the app contains roughly 69,000 hospitals in the US with numbers of hospital related infections by surgical/medical procedure.
 
 
-First preliminary visualization is working. The next step is to implement a leaflet-map which then shows the hospitals after subsetting.
+First preliminary visualization is working:
+
+https://primesty.shinyapps.io/hospital_comparison/
 
 More to come soon...
 
